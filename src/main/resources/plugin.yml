@@ -1,0 +1,24 @@
+name: LobbyCombat
+version: 1.0-SNAPSHOT
+description: A Minecraft lobbying and combat system for PandaSpigot
+author: Dragones
+authors:
+  - Dragones
+
+main: mc.dragones.lobbycombat.LobbyCombatPlugin
+
+# Supported API versions for Minecraft 1.20.1
+api-version: "1.20"
+
+# Commands
+commands:
+  lobbypvp:
+    description: Lobby PvP commands
+    usage: /lobbypvp <enable|disable|interrupt>
+    aliases:
+      - lpvp
+  lobbycombat:
+    description: LobbyCombat admin commands
+    usage: /lobbycombat <reload>
+    aliases:
+      - lcadmin

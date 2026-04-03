@@ -1,0 +1,184 @@
+# LobbyCombat Configuration
+# This file contains all customizable settings for the LobbyCombat plugin
+
+# Configuration Version - DO NOT MODIFY
+# When the plugin detects a version mismatch, it will backup your current config and update it
+config-version: 2
+
+# PvP Settings
+pvp:
+  # Anti-interrupt feature (prevents interrupting ongoing fights)
+  anti-interrupt:
+    enabled: false  # Default: off, can be toggled with /lobbypvp interrupt
+
+  # Kill streak tracking
+  kill-streak:
+    threshold: 10  # Broadcast message when player reaches this many consecutive kills
+    broadcast-message: "&6%p has reached a %k kill streak!"  # %p = player name, %k = streak number
+    break-threshold: 3  # Minimum kill streak to announce when broken
+    break-message: "&c%p's %k kill streak was broken by %q!"  # %p = victim, %q = killer, %k = streak number
+
+  # Disable PvP settings
+  disable:
+    countdown-seconds: 10  # Seconds to wait before disabling if in combat
+    no-combat-seconds: 10  # Seconds without damage to disable instantly and consider the fight over
+    countdown-color: "&e"  # Color of the disable pvp countdown
+    command: ""  # Command to run when PvP is disabled %p is a placeholder for the player name
+    message-cooldown: 5  # Cooldown in seconds between pvp-disabled messages to prevent spam
+
+  # Coward logic (death on leave)
+  coward:
+    enabled: true
+    death-message: "&cYou disconnected from a fight with %o and were marked as dead!"  # Message sent to the disconnected player on rejoin
+    win-message: "&a%p disconnected from your fight and you were awarded the kill!"  # Message sent to the opponent who got the kill
+    message-delay: 2  # Delay in seconds before sending messages after player rejoins
+    logging: true  # Enable/disable console logging of coward disconnects
+    notify-permission: "lobbycombat.coward.notify"  # Permission for players to receive coward notifications
+    command: ""  # Command to run when a player disconnects mid-fight (use %p for player name, %o for opponent name)
+
+  # Kill commands (run when a player kills another)
+  kill-commands:
+    - "console:give %k minecraft:golden_apple 1"  # Give killer a golden apple
+    - "console:eco give %k 100"  # Give killer 100 coins
+    - "player:broadcast &a%k killed %v!"  # Announce the kill
+
+# Inventory Management
+inventory:
+  clear-method: "plugin"  # "plugin" or "command"
+  clear-command: "clear %p"  # Only used if clear-method is "command"
+
+  # Items to give on PvP enable
+  items:
+    armor:
+      helmet:
+        material: "LEATHER_HELMET"
+        color: "random"  # "random" or hex color like "#FF0000"
+      chestplate:
+        material: "LEATHER_CHESTPLATE"
+        color: "random"
+      leggings:
+        material: "IRON_LEGGINGS"
+      boots:
+        material: "IRON_BOOTS"
+
+    # Armor color customization
+    armor-colors:
+      # Available colors (hex codes)
+      available-colors:
+        red: "#FF0000"
+        blue: "#0000FF"
+        green: "#00FF00"
+        yellow: "#FFFF00"
+        purple: "#800080"
+        orange: "#FFA500"
+        pink: "#FFC0CB"
+        cyan: "#00FFFF"
+        lime: "#00FF00"
+        magenta: "#FF00FF"
+        white: "#FFFFFF"
+        gray: "#808080"
+        black: "#000000"
+
+      # Permissions for each color (leave empty for no permission required)
+      permissions:
+        red: ""
+        blue: ""
+        green: ""
+        yellow: ""
+        purple: ""
+        orange: ""
+        pink: ""
+        cyan: ""
+        lime: ""
+        magenta: ""
+        white: ""
+        gray: ""
+        black: ""
+
+      # Special color modes
+      special-colors:
+        random:
+          permission: ""  # Permission to use random color
+        rainbow:
+          permission: "lobbycombat.colors.rainbow"  # Permission to use rainbow color
+          speed: 2  # Rainbow cycle speed (higher = faster)
+        pastel:
+          permission: "lobbycombat.colors.pastel"  # Permission to use pastel rainbow
+          speed: 2  # Pastel cycle speed (higher = faster)
+
+    weapon:
+      material: "IRON_SWORD"
+      enchantments:
+        - "SHARPNESS:1"
+
+    food:
+      material: "GOLDEN_APPLE"
+      amount: 3
+
+    disable-item:
+      material: "BARRIER"
+      name: "&cDisable PvP"
+      lore:
+        - "&7Click to disable PvP"
+
+# Messages
+messages:
+  pvp-not-enabled: "&cThis player hasn't enabled PvP!"
+  already-fighting: "&cThis player is already fighting someone else!"
+  disable-countdown: "&cDisabling PvP in %s seconds..."
+  pvp-enabled: "&aPvP enabled!"
+  pvp-disabled: "&cPvP disabled!"
+  anti-interrupt-toggled: "&aAnti-interrupt %s"
+  pvp-disabled-attacker: "&cYou have PvP disabled!"
+  pvp-disabled-victim: "&cThis player has PvP disabled!"
+  pvp-disabled-both: "&cBoth players have PvP disabled!"
+  pvp-status: "&6PvP Status: %s"
+  combat-status: "&6Combat Status: %s"
+  fighting-with: "&6Fighting With: %s"
+  coward-notification: "&c[LobbyCombat] %p disconnected while fighting %o (coward death!)"
+  countdown-already-running: "&cA PvP disable countdown is already running!"
+  alerts-enabled: "&aCoward alerts &cenabled!"
+  alerts-disabled: "&cCoward alerts &cdisabled!"
+  assist-message: "&aYou got an assist! (%a% contribution with %h% hits on %p%)"
+
+# Sounds
+sounds:
+  pvp-not-enabled: "BLOCK_ANVIL_LAND"
+  already-fighting: "VILLAGER_NO"
+  disable-countdown: "CLICK"
+  pvp-enabled: "LEVEL_UP"
+  pvp-disabled: "ANVIL_BREAK"
+  kill-streak: "ENTITY_WITHER_SPAWN"
+  kill-streak-break: "ENTITY_IRON_GOLEM_DEATH"
+
+# Action Bar Messages
+actionbar:
+  pvp-not-enabled: "&cPlayer hasn't enabled PvP!"
+  already-fighting: "&cPlayer is already fighting!"
+
+# Permissions
+permissions:
+  enable: "lobbycombat.pvp.enable"
+  disable: "lobbycombat.pvp.disable"
+  interrupt: "lobbycombat.pvp.interrupt"
+  admin:
+    reload: "lobbycombat.admin.reload"
+    alerts: "lobbycombat.admin.alerts"
+
+# Database Configuration
+database:
+  # Storage type: "sqlite" or "mysql"
+  type: "sqlite"
+  
+  # SQLite settings (used when type is "sqlite")
+  sqlite:
+    file: "lobbycombat.db"
+  
+  # MySQL/MariaDB settings (used when type is "mysql")
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "lobbycombat"
+    username: "root"
+    password: "password"
+    table-prefix: "lc_"
