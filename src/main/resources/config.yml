@@ -3,13 +3,22 @@
 
 # Configuration Version - DO NOT MODIFY
 # When the plugin detects a version mismatch, it will backup your current config and update it
-config-version: 2
+config-version: 1
+
+# Debug Settings
+debug:
+  enabled: false  # Enable/disable debug logs, enable only when troubleshooting if you don't want some big ass spam on your console lmfao!
 
 # PvP Settings
 pvp:
   # Anti-interrupt feature (prevents interrupting ongoing fights)
   anti-interrupt:
     enabled: false  # Default: off, can be toggled with /lobbypvp interrupt
+
+  # Entity interaction restrictions
+  entity-interaction:
+    prevent-while-pvp: true  # Prevent interacting with entities (NPCs, mobs) while PvP is enabled
+    message: "&cYou cannot interact with entities while PvP is enabled! Disable PvP first."
 
   # Kill streak tracking
   kill-streak:
@@ -182,3 +191,105 @@ database:
     username: "root"
     password: "password"
     table-prefix: "lc_"
+
+# Anti-Kill Farming Detection
+anti-kill-farm:
+  enabled: false  # Enable/disable anti-farm detection
+
+  # Frequency-based detection
+  max-kills-per-target: 3  # Maximum kills on same target in time window
+  time-window-minutes: 10  # Time window for kill frequency check
+  cooldown-per-target-minutes: 5  # Cooldown between valid kills on same target
+
+  # Diversity requirement
+  min-unique-players-for-streak: 3  # Minimum unique players in kill streak
+
+  # Movement thresholds
+  min-movement-distance-blocks: 5.0  # Minimum distance victim must move to not be suspicious
+  movement-tracking-enabled: true
+  combat-movement-sample-interval-ticks: 10  # How often to sample movement
+
+  # Coordinate clustering
+  coordinate-cluster-radius-blocks: 10  # Radius to consider deaths as "clustered"
+  death-location-history-size: 10  # How many recent death locations to track
+
+  # Suspicion scoring
+  suspicion-score-threshold-log: 4  # Score threshold to log (silent)
+  suspicion-score-threshold-alert: 6  # Score threshold for Discord alert
+  suspicion-score-threshold-critical: 8  # Score threshold for critical alert
+
+  # Logging
+  log-file-enabled: true
+  log-to-console: false
+
+  # Discord webhook
+  discord-webhook-enabled: false
+  discord-webhook-url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+  discord-webhook-alert-threshold: 6
+
+  # Discord webhook customization
+  discord-webhook:
+    # Bot username and avatar
+    username: "LobbyCombat AntiFarm"
+    avatar-url: ""  # Leave empty for default
+
+    # Role mentions (comma-separated list of role IDs)
+    mention-roles: ""  # e.g., "123456789012345678,987654321098765432"
+
+    # Embed customization
+    embed:
+      title: "WARNING: Kill Farming Detected"
+      description: "Suspicious activity flagged for staff review"
+      color: 15158332  # Red color (decimal)
+      thumbnail-url: ""  # Leave empty for no thumbnail
+
+      # Footer customization
+      footer:
+        text: "LobbyCombat Anti-Farm System"
+        icon-url: ""
+
+      # Author customization
+      author:
+        name: "Anti-Farm Alert"
+        icon-url: ""
+
+    # Field customization with placeholders
+    # Note: inline must be true or false (not quoted)
+    fields:
+      - name: "Attacker"
+        value: "**%attacker%** (%attacker_uuid%)"
+        inline: true
+      - name: "Victim"
+        value: "**%victim%** (%victim_uuid%)"
+        inline: true
+      - name: "Suspicion Score"
+        value: "**%score%/10** (%severity%)"
+        inline: true
+      - name: "Location"
+        value: "**X:** %x% **Y:** %y% **Z:** %z%\n**World:** %world%"
+        inline: false
+      - name: "Suspicious Behaviors"
+        value: "%flags%"
+        inline: false
+      - name: "Combat Stats"
+        value: "**Duration:** %combat_duration%s\n**Victim Damage Dealt:** %victim_damage%\n**Other Attackers:** %other_attackers%"
+        inline: false
+      - name: "Timestamp"
+        value: "%timestamp%"
+        inline: true
+
+    # Available placeholders:
+    # %attacker% - Attacker player name
+    # %attacker_uuid% - Attacker UUID
+    # %victim% - Victim player name
+    # %victim_uuid% - Victim UUID
+    # %score% - Suspicion score (0-10)
+    # %severity% - Severity level (Low/Medium/High/Critical)
+    # %x%, %y%, %z% - Kill location coordinates
+    # %world% - World name
+    # %flags% - List of suspicious behavior flags
+    # %combat_duration% - Combat duration in seconds
+    # %victim_damage% - Damage dealt by victim
+    # %other_attackers% - Number of other attackers
+    # %timestamp% - Formatted timestamp
+    # %server_name% - Server name from server.properties
