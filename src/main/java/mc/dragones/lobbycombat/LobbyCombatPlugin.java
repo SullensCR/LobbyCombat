@@ -20,7 +20,8 @@ public class LobbyCombatPlugin extends JavaPlugin {
 
     private DatabaseManager databaseManager;
     private ArmorColorManager armorColorManager;
-    private static final int CURRENT_CONFIG_VERSION = 3;
+    private AntiFarmTracker antiFarmTracker;
+    private static final int CURRENT_CONFIG_VERSION = 1;
 
     @Override
     public void onEnable() {
@@ -47,13 +48,21 @@ public class LobbyCombatPlugin extends JavaPlugin {
         // Initialize armor color manager
         armorColorManager = new ArmorColorManager(this);
 
+        // Initialize anti-farm tracker
+        antiFarmTracker = new AntiFarmTracker(this);
+        if (getConfig().getBoolean("anti-kill-farm.enabled", false)) {
+            getLogger().info("Anti-farm detection system initialized!");
+        }
+
         // Register commands
         getCommand("lobbypvp").setExecutor(new LobbyPvpCommand(this));
         getCommand("lobbycombat").setExecutor(new LobbyCombatCommand(this));
         
         // Register events
-        getServer().getPluginManager().registerEvents(new CombatListener(this), this);
-        
+        getServer().getPluginManager().registerEvents(new CombatEventListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerLifecycleListener(this), this);
+        getServer().getPluginManager().registerEvents(new InventoryRestrictionListener(this), this);
+
         // Register PlaceholderAPI expansion
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new LobbyCombatExpansion(this).register();
@@ -165,5 +174,13 @@ public class LobbyCombatPlugin extends JavaPlugin {
 
     public ArmorColorManager getArmorColorManager() {
         return armorColorManager;
+    }
+
+    public AntiFarmTracker getAntiFarmTracker() {
+        return antiFarmTracker;
+    }
+
+    public boolean isDebugEnabled() {
+        return getConfig().getBoolean("debug.enabled", false);
     }
 }

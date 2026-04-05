@@ -288,4 +288,8 @@ public class ArmorColorManager {
             return Color.WHITE;
         }
     }
+
+    public boolean isValidColor(String colorName) {
+        return colorName.equals("random") || colorName.equals("rainbow") || colorName.equals("pastel") || availableColors.containsKey(colorName);
+    }
 }

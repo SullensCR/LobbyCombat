@@ -36,7 +36,7 @@ public class LobbyPvpCommand implements CommandExecutor {
         PlayerData data = PlayerData.get(player);
 
         if (args.length == 0) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /lobbypvp <enable|disable|status|color|interrupt|alerts|reload>");
+            player.sendMessage(ChatColor.YELLOW + "Usage: /lobbypvp <enable|disable|status|color|interrupt|alerts|farmlogs|farmcheck|reload>");
             return true;
         }
 
@@ -91,6 +91,27 @@ public class LobbyPvpCommand implements CommandExecutor {
                 toggleAlerts(player, data);
                 break;
 
+            case "farmlogs":
+                if (!player.hasPermission("lobbycombat.antifarm.staff")) {
+                    player.sendMessage(ChatColor.RED + "You don't have permission to view anti-farm logs!");
+                    return true;
+                }
+                // Show latest global alerts (not player-specific)
+                showLatestGlobalAlerts(player);
+                break;
+
+            case "farmcheck":
+                if (!player.hasPermission("lobbycombat.antifarm.staff")) {
+                    player.sendMessage(ChatColor.RED + "You don't have permission to view anti-farm logs!");
+                    return true;
+                }
+                if (args.length > 1) {
+                    viewFarmLogs(player, args[1]);
+                } else {
+                    player.sendMessage(ChatColor.RED + "Usage: /lobbypvp farmcheck <player>");
+                }
+                break;
+
             case "reload":
                 if (!player.hasPermission(plugin.getConfig().getString("permissions.admin.reload", "lobbycombat.admin.reload"))) {
                     player.sendMessage(ChatColor.RED + "You don't have permission to reload the plugin!");
@@ -100,7 +121,7 @@ public class LobbyPvpCommand implements CommandExecutor {
                 break;
 
             default:
-                player.sendMessage(ChatColor.YELLOW + "Usage: /lobbypvp <enable|disable|status|color|interrupt|alerts|reload>");
+                player.sendMessage(ChatColor.YELLOW + "Usage: /lobbypvp <enable|disable|status|color|interrupt|alerts|farmlogs|farmcheck|reload>");
                 break;
         }
 
@@ -127,7 +148,9 @@ public class LobbyPvpCommand implements CommandExecutor {
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
 
-        plugin.getLogger().info("[DEBUG] Enabling PvP for " + player.getName() + ", giving items...");
+        if (plugin.isDebugEnabled()) {
+            plugin.getLogger().info("[DEBUG] Enabling PvP for " + player.getName() + ", giving items...");
+        }
 
         // Give items
         givePvpItems(player);
@@ -322,17 +345,23 @@ public class LobbyPvpCommand implements CommandExecutor {
     private ItemStack createArmorItem(String type, org.bukkit.Color sharedColor) {
         String materialName = plugin.getConfig().getString("inventory.items.armor." + type + ".material");
         if (materialName == null) {
-            plugin.getLogger().info("[DEBUG] Armor material for " + type + " is null in config");
+            if (plugin.isDebugEnabled()) {
+                plugin.getLogger().info("[DEBUG] Armor material for " + type + " is null in config");
+            }
             return null;
         }
 
         Material material = Material.getMaterial(materialName);
         if (material == null) {
-            plugin.getLogger().info("[DEBUG] Material '" + materialName + "' for " + type + " not found");
+            if (plugin.isDebugEnabled()) {
+                plugin.getLogger().info("[DEBUG] Material '" + materialName + "' for " + type + " not found");
+            }
             return null;
         }
 
-        plugin.getLogger().info("[DEBUG] Creating armor item: " + type + " with material " + materialName);
+        if (plugin.isDebugEnabled()) {
+            plugin.getLogger().info("[DEBUG] Creating armor item: " + type + " with material " + materialName);
+        }
         ItemStack item = new ItemStack(material);
 
         if (material.name().contains("LEATHER")) {
@@ -527,7 +556,13 @@ public class LobbyPvpCommand implements CommandExecutor {
     private void setArmorColor(Player player, String colorName) {
         ArmorColorManager colorManager = plugin.getArmorColorManager();
 
-        // Check if the color is available
+        // Check if the color is valid
+        if (!colorManager.isValidColor(colorName)) {
+            player.sendMessage(ChatColor.RED + "Invalid color! Use /lobbypvp color to see available colors.");
+            return;
+        }
+
+        // Check if the color is available (permission)
         if (!colorManager.canUseColor(player, colorName)) {
             player.sendMessage(ChatColor.RED + "You don't have permission to use this color!");
             return;
@@ -536,5 +571,84 @@ public class LobbyPvpCommand implements CommandExecutor {
         // Apply the color using the color manager
         colorManager.applyArmorColor(player, colorName);
         player.sendMessage(ChatColor.GREEN + "Armor color changed to " + colorName + "!");
+    }
+
+    private void viewFarmLogs(Player player, String targetPlayerName) {
+        AntiFarmTracker tracker = plugin.getAntiFarmTracker();
+        if (tracker == null || !tracker.isEnabled()) {
+            player.sendMessage(ChatColor.RED + "Anti-farm system is not enabled!");
+            return;
+        }
+        // Get player UUID by name (simplified approach - in production you'd want to load by UUID)
+        Player targetPlayer = plugin.getServer().getPlayer(targetPlayerName);
+        if (targetPlayer == null) {
+            player.sendMessage(ChatColor.RED + "Player '" + targetPlayerName + "' not found!");
+            return;
+        }
+        java.util.List<KillEventData> killHistory = tracker.getKillHistory(targetPlayer.getUniqueId());
+        if (killHistory == null || killHistory.isEmpty()) {
+            player.sendMessage(ChatColor.YELLOW + "No kill history found for " + targetPlayerName);
+            return;
+        }
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6=== Anti-Farm Logs for " + targetPlayerName + " ==="));
+        player.sendMessage(ChatColor.YELLOW + "Total kills recorded: " + killHistory.size());
+        player.sendMessage("");
+        // Show last 5 kills
+        int shown = 0;
+        for (int i = killHistory.size() - 1; i >= 0 && shown < 5; i--) {
+            KillEventData kill = killHistory.get(i);
+            String timestamp = new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date(kill.getTimestamp()));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                "&7[" + timestamp + "] &a" + kill.getAttackerName() + " &7killed &c" + kill.getVictimName() +
+                " &7(Score: " + kill.getSuspicionScore() + "/10)"));
+            // Show flags if suspicious
+            if (kill.getSuspicionScore() >= 4) {
+                for (String flag : kill.getSuspiciousFlags()) {
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "  &e• " + flag));
+                }
+            }
+            shown++;
+        }
+        if (killHistory.size() > 5) {
+            player.sendMessage(ChatColor.GRAY + "... and " + (killHistory.size() - 5) + " more kills. Check logs for full history.");
+        }
+    }
+
+    /**
+     * Shows the latest global anti-farm alerts (recent suspicious kills across all players).
+     */
+    private void showLatestGlobalAlerts(Player player) {
+        AntiFarmTracker tracker = plugin.getAntiFarmTracker();
+        if (tracker == null || !tracker.isEnabled()) {
+            player.sendMessage(ChatColor.RED + "Anti-farm system is not enabled!");
+            return;
+        }
+        // Gather all kill events from all players
+        java.util.List<KillEventData> allKills = tracker.getAllKillEvents();
+        if (allKills == null || allKills.isEmpty()) {
+            player.sendMessage(ChatColor.YELLOW + "No anti-farm alerts found.");
+            return;
+        }
+        // Sort by timestamp descending
+        allKills.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6=== Latest Anti-Farm Alerts ==="));
+        int shown = 0;
+        for (KillEventData kill : allKills) {
+            if (shown >= 10) break;
+            String timestamp = new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date(kill.getTimestamp()));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                "&7[" + timestamp + "] &a" + kill.getAttackerName() + " &7killed &c" + kill.getVictimName() +
+                " &7(Score: " + kill.getSuspicionScore() + "/10)"));
+            // Show flags if suspicious
+            if (kill.getSuspicionScore() >= 4) {
+                for (String flag : kill.getSuspiciousFlags()) {
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "  &e• " + flag));
+                }
+            }
+            shown++;
+        }
+        if (allKills.size() > 10) {
+            player.sendMessage(ChatColor.GRAY + "... and " + (allKills.size() - 10) + " more alerts. Check logs for full history.");
+        }
     }
 }

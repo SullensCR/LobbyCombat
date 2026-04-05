@@ -196,7 +196,9 @@ public class DatabaseManager {
             stmt.setString(9, cowardWinMessage);
             stmt.setBoolean(10, data.isAntiInterruptEnabled());
             stmt.executeUpdate();
-            plugin.getLogger().info("[DEBUG] Saved player " + uuid + " - deaths=" + deaths + ", deathMsg=" + cowardDeathMessage + ", winMsg=" + cowardWinMessage);
+            if (((LobbyCombatPlugin) plugin).isDebugEnabled()) {
+                plugin.getLogger().info("[DEBUG] Saved player " + uuid + " - deaths=" + deaths + ", deathMsg=" + cowardDeathMessage + ", winMsg=" + cowardWinMessage);
+            }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save player data for " + uuid, e);
         }
@@ -230,10 +232,14 @@ public class DatabaseManager {
                     data.setCowardDeathMessage(cowardDeathMessage);
                     data.setCowardWinMessage(cowardWinMessage);
                     data.setAntiInterruptEnabled(antiInterruptEnabled);
-                    plugin.getLogger().info("[DEBUG] Loaded player data from DB for " + uuid + " - deathMsg: " + cowardDeathMessage + ", winMsg: " + cowardWinMessage);
+                    if (((LobbyCombatPlugin) plugin).isDebugEnabled()) {
+                        plugin.getLogger().info("[DEBUG] Loaded player data from DB for " + uuid + " - deathMsg: " + cowardDeathMessage + ", winMsg: " + cowardWinMessage);
+                    }
                     return data;
                 } else {
-                    plugin.getLogger().info("[DEBUG] No player data found in DB for " + uuid + " - creating new");
+                    if (((LobbyCombatPlugin) plugin).isDebugEnabled()) {
+                        plugin.getLogger().info("[DEBUG] No player data found in DB for " + uuid + " - creating new");
+                    }
                 }
             }
         } catch (SQLException e) {

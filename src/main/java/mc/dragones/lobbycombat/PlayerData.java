@@ -32,6 +32,14 @@ public class PlayerData {
     private java.util.Map<java.util.UUID, Integer> recentHits = new java.util.HashMap<>();  // Track hits per attacker
     private long pvpDisabledMessageCooldown = 0;  // Cooldown for pvp-disabled messages to prevent spam
 
+    // Anti-farm tracking
+    private long combatStartTime = 0;  // Timestamp when combat started
+    private org.bukkit.Location lastRecordedLocation = null;  // Last recorded position for movement tracking
+    private double movementDistance = 0;  // Total distance moved during current combat
+    private boolean hasSprinted = false;  // Did player sprint during current combat
+    private int damageDealtInCombat = 0;  // Damage dealt to opponent during current combat
+    private long lastMoveTime = 0;  // Last time player moved (for variance calculation)
+
     // Package-private constructor for use within the package
     PlayerData(UUID uuid) {
         this.uuid = uuid;
@@ -284,5 +292,54 @@ public class PlayerData {
 
     public void setArmorColor(String armorColor) {
         this.armorColor = armorColor;
+    }
+
+    // Anti-farm tracking methods
+    public long getCombatStartTime() {
+        return combatStartTime;
+    }
+
+    public void setCombatStartTime(long combatStartTime) {
+        this.combatStartTime = combatStartTime;
+    }
+
+    public org.bukkit.Location getLastRecordedLocation() {
+        return lastRecordedLocation;
+    }
+
+    public void setLastRecordedLocation(org.bukkit.Location lastRecordedLocation) {
+        this.lastRecordedLocation = lastRecordedLocation;
+    }
+
+    public double getMovementDistance() {
+        return movementDistance;
+    }
+
+    public void setMovementDistance(double movementDistance) {
+        this.movementDistance = movementDistance;
+    }
+
+    public boolean hasSprinted() {
+        return hasSprinted;
+    }
+
+    public void setHasSprinted(boolean hasSprinted) {
+        this.hasSprinted = hasSprinted;
+    }
+
+    public int getDamageDealtInCombat() {
+        return damageDealtInCombat;
+    }
+
+    public void setDamageDealtInCombat(int damageDealtInCombat) {
+        this.damageDealtInCombat = damageDealtInCombat;
+    }
+
+    public long getLastMoveTime() {
+        return lastMoveTime;
+    }
+
+    public void setLastMoveTime(long lastMoveTime) {
+        this.lastMoveTime = lastMoveTime;
     }
 }
